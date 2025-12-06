@@ -1,10 +1,9 @@
-from fastapi import FastAPI
-from mangum import Mangum
+from http.server import BaseHTTPRequestHandler
 
-app = FastAPI()
-
-@app.get("/api/health")
-def health():
-    return {"status": "ok", "msg": "Minimal diagnostic server"}
-
-handler = Mangum(app)
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/plain')
+        self.end_headers()
+        self.wfile.write('Hello from Standard Lib'.encode('utf-8'))
+        return
