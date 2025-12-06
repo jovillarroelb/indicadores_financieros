@@ -73,6 +73,5 @@ async def get_history(indicator: str, start: str, end: str):
 
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
 
-# Vercel Handler
-from mangum import Mangum
-handler = Mangum(app)
+# Vercel Native Support for FastAPI (No Mangum needed)
+# app variable is automatically detected as ASGI
