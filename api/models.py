@@ -19,3 +19,4 @@ class IndicatorsResponse(BaseModel):
     dolar: Indicator
     euro: Indicator
     utm: Indicator
+    debug_log: Optional[str] = None

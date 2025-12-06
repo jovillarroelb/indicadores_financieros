@@ -18,7 +18,8 @@ async def fetch_bc_euro() -> Optional[float]:
     """Scrape Euro from Banco Central."""
     try:
         def _req():
-            return requests.get(BC_EURO_URL, timeout=10.0, verify=False)
+            headers = {"User-Agent": "Mozilla/5.0"}
+            return requests.get(BC_EURO_URL, headers=headers, timeout=20.0, verify=False)
         
         resp = await asyncio.to_thread(_req)
         if resp.status_code != 200:
@@ -207,17 +208,21 @@ async def fetch_indicators(force_refresh: bool = False) -> IndicatorsResponse:
             uf=ind_uf,
             dolar=ind_usd,
             euro=ind_eur,
-            utm=ind_utm
+            utm=ind_utm,
+            debug_log="Success"
         )
         
         cache["indicators"] = result
         return result
 
     except Exception as e:
-        print(f"Error fetching indicators: {e}")
+        import traceback
+        err_msg = f"Error: {str(e)} Type: {type(e)} Trace: {traceback.format_exc()}"
+        print(f"Error fetching indicators: {err_msg}")
         return IndicatorsResponse(
             uf=Indicator(codigo="uf", nombre="UF", unidad_medida="Pesos", valor=0, fecha=""),
             dolar=Indicator(codigo="dolar", nombre="Dolar", unidad_medida="Pesos", valor=0, fecha=""),
             euro=Indicator(codigo="euro", nombre="Euro", unidad_medida="Pesos", valor=0, fecha=""),
-            utm=Indicator(codigo="utm", nombre="UTM", unidad_medida="Pesos", valor=0, fecha="")
+            utm=Indicator(codigo="utm", nombre="UTM", unidad_medida="Pesos", valor=0, fecha=""),
+            debug_log=err_msg
         )
