@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from services import fetch_indicators
-from history_service import get_history_by_range
+# from services import fetch_indicators
+# from history_service import get_history_by_range
 from models import IndicatorsResponse
 from typing import List, Dict, Any
 
@@ -31,6 +31,7 @@ async def test_endpoint():
 @app.get("/api/indicators")
 async def get_indicators(force: bool = False):
     try:
+        from services import fetch_indicators
         data = await fetch_indicators(force_refresh=force)
         return data
     except Exception as e:
@@ -55,10 +56,16 @@ async def get_history(indicator: str, start: str, end: str):
       - start: YYYY-MM-DD
       - end: YYYY-MM-DD
     """
-    data = await get_history_by_range(indicator, start, end)
-    if not data and start > end:
-         raise HTTPException(status_code=400, detail="Invalid date range")
-    return data
+    try:
+        from history_service import get_history_by_range
+        data = await get_history_by_range(indicator, start, end)
+        if not data and start > end:
+             raise HTTPException(status_code=400, detail="Invalid date range")
+        return data
+    except Exception as e:
+        import traceback
+        print(f"History Error: {e} {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
 
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
 
