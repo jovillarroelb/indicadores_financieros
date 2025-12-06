@@ -1,4 +1,5 @@
 import requests
+import asyncio
 import logging
 from datetime import datetime
 from bs4 import BeautifulSoup
