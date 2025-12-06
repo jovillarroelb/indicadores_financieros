@@ -2,7 +2,7 @@ import httpx
 import logging
 from datetime import datetime
 from bs4 import BeautifulSoup
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +149,7 @@ async def fetch_history_from_sii(indicator: str, year: int) -> List[Dict[str, An
         logger.error(f"Error scraping SII history: {e}")
         return []
 
-def parse_sii_value(text: str) -> float | None:
+def parse_sii_value(text: str) -> Optional[float]:
     if not text: return None
     # Remove dots usually used for thousands in Chile
     # Replace comma with dot for decimals
