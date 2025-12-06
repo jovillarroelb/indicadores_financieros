@@ -28,13 +28,22 @@ async def health_check():
 async def test_endpoint():
     return {"msg": "test ok"}
 
-@app.get("/api/indicators", response_model=IndicatorsResponse)
+@app.get("/api/indicators")
 async def get_indicators(force: bool = False):
     try:
         data = await fetch_indicators(force_refresh=force)
         return data
     except Exception as e:
-        raise HTTPException(status_code=503, detail="Service Unavailable: Could not fetch indicators")
+        import traceback
+        error_info = f"CRITICAL API ERROR: {str(e)} | {traceback.format_exc()}"
+        print(error_info)
+        return {
+            "uf": {"valor": 0, "fecha": "", "codigo": "err", "nombre": "Error", "unidad_medida": ""},
+            "dolar": {"valor": 0, "fecha": "", "codigo": "err", "nombre": "Error", "unidad_medida": ""},
+            "euro": {"valor": 0, "fecha": "", "codigo": "err", "nombre": "Error", "unidad_medida": ""},
+            "utm": {"valor": 0, "fecha": "", "codigo": "err", "nombre": "Error", "unidad_medida": ""},
+            "debug_log": error_info
+        }
 
 @app.get("/api/history/{indicator}")
 async def get_history(indicator: str, start: str, end: str):
