@@ -25,9 +25,9 @@ async def fetch_history_from_sii(indicator: str, year: int) -> List[Dict[str, An
              resp = await asyncio.to_thread(_req_euro)
              if resp.status_code == 200:
                  return resp.json().get("serie", [])
-                 else:
-                     logger.warning(f"Mindicador returned {resp.status_code} for Euro")
-                     return []
+             else:
+                 logger.warning(f"Mindicador returned {resp.status_code} for Euro")
+                 return []
          except Exception as e:
              logger.error(f"Euro fallback failed: {e}")
              return []
