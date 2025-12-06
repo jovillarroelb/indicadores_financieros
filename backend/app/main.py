@@ -1,8 +1,15 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from .services import fetch_indicators
-from .history_service import get_history_by_range
-from .models import IndicatorsResponse
+from fastapi.middleware.cors import CORSMiddleware
+
+try:
+    from .services import fetch_indicators
+    from .history_service import get_history_by_range
+    from .models import IndicatorsResponse
+except ImportError:
+    from services import fetch_indicators
+    from history_service import get_history_by_range
+    from models import IndicatorsResponse
 from typing import List, Dict, Any
 
 app = FastAPI(
