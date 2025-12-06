@@ -1,14 +1,15 @@
-import httpx
+import requests
 from bs4 import BeautifulSoup
-from cachetools import TTLCache
 import asyncio
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
-from .models import IndicatorsResponse, Indicator
-from .history_service import fetch_history_from_sii, get_history_by_range
+from models import IndicatorsResponse, Indicator
+from history_service import fetch_history_from_sii, get_history_by_range
 
-# Cache for 4 hours (real-time data)
-cache = TTLCache(maxsize=1, ttl=14400)
+# Simple Cache
+cache = {}
+CACHE_TTL = 14400
+last_cache_time = None
 
 # URL for Banco Central Euro (from user)
 BC_EURO_URL = "https://si3.bcentral.cl/indicadoressiete/secure/Serie.aspx?gcode=PRE_EUR&param=cgBnAE8AOQBlAGcAIwBiAFUALQBsAEcAYgBOAEkASQBCAEcAegBFAFkAeABkADgASAA2AG8AdgB2AFMAUgBYADIAQwBzAEEARQBMAG8ASgBWADQATABrAGQAZAB1ADIAeQBBAFAAZwBhADIAbABWAHcAXwBXAGgATAAkAFIAVAB1AEIAbAB3AFoAdQBRAFgAZwA5AHgAdgAwACQATwBZADcAMwAuAGIARwBFAFIASwAuAHQA"
@@ -16,12 +17,14 @@ BC_EURO_URL = "https://si3.bcentral.cl/indicadoressiete/secure/Serie.aspx?gcode=
 async def fetch_bc_euro() -> Optional[float]:
     """Scrape Euro from Banco Central."""
     try:
-        async with httpx.AsyncClient(verify=False) as client:
-            resp = await client.get(BC_EURO_URL, timeout=10.0)
-            if resp.status_code != 200:
-                return None
-            
-            soup = BeautifulSoup(resp.text, 'html.parser')
+        def _req():
+            return requests.get(BC_EURO_URL, timeout=10.0, verify=False)
+        
+        resp = await asyncio.to_thread(_req)
+        if resp.status_code != 200:
+            return None
+        
+        soup = BeautifulSoup(resp.text, 'html.parser')
             # Look for table with "Día" in header
             target_table = None
             tables = soup.find_all("table")

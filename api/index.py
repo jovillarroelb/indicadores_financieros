@@ -1,16 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-# from services import fetch_indicators
-# from history_service import get_history_by_range
-# from models import IndicatorsResponse
+from services import fetch_indicators
+from history_service import get_history_by_range
+from models import IndicatorsResponse
 from typing import List, Dict, Any
-
-# Mock Response Logic
-async def fetch_indicators(force_refresh=False):
-    return {"mock": "data"}
-
-async def get_history_by_range(ind, start, end):
-    return [{"fecha": "2024-01-01", "valor": 100}]
 
 app = FastAPI(
     title="Chilean Economic Indicators API",
@@ -35,7 +28,7 @@ async def health_check():
 async def test_endpoint():
     return {"msg": "test ok"}
 
-@app.get("/api/indicators")
+@app.get("/api/indicators", response_model=IndicatorsResponse)
 async def get_indicators(force: bool = False):
     try:
         data = await fetch_indicators(force_refresh=force)
@@ -57,6 +50,8 @@ async def get_history(indicator: str, start: str, end: str):
     if not data and start > end:
          raise HTTPException(status_code=400, detail="Invalid date range")
     return data
+
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
 
 # Vercel Handler
 from mangum import Mangum

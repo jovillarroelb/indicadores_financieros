@@ -1,4 +1,4 @@
-import httpx
+import requests
 import logging
 from datetime import datetime
 from bs4 import BeautifulSoup
@@ -18,11 +18,12 @@ async def fetch_history_from_sii(indicator: str, year: int) -> List[Dict[str, An
     if ind_lower == "euro":
          try:
              url = f"https://mindicador.cl/api/euro/{year}"
-             # Simple synchronous-style call inside async function needs await
-             async with httpx.AsyncClient() as client:
-                 resp = await client.get(url)
-                 if resp.status_code == 200:
-                     return resp.json().get("serie", [])
+             def _req_euro():
+                 return requests.get(url)
+             
+             resp = await asyncio.to_thread(_req_euro)
+             if resp.status_code == 200:
+                 return resp.json().get("serie", [])
                  else:
                      logger.warning(f"Mindicador returned {resp.status_code} for Euro")
                      return []
@@ -48,9 +49,11 @@ async def fetch_history_from_sii(indicator: str, year: int) -> List[Dict[str, An
         headers = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
-        async with httpx.AsyncClient(verify=False) as client:
-            resp = await client.get(url, headers=headers, timeout=15.0)
-            if resp.status_code != 200:
+        def _req_sii():
+            return requests.get(url, headers=headers, timeout=15.0, verify=False)
+
+        resp = await asyncio.to_thread(_req_sii)
+        if resp.status_code != 200:
                 logger.error(f"SII Error {resp.status_code} for {url}")
                 return []
             
