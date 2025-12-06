@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-httpx
+# httpx
 cachetools
 beautifulsoup4
 mangum
