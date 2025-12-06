@@ -55,99 +55,99 @@ async def fetch_history_from_sii(indicator: str, year: int) -> List[Dict[str, An
 
         resp = await asyncio.to_thread(_req_sii)
         if resp.status_code != 200:
-                logger.error(f"SII Error {resp.status_code} for {url}")
-                return []
-            
-            soup = BeautifulSoup(resp.text, 'html.parser')
-            
-            # UTM Format
-            if ind_lower == "utm":
-                rows = soup.find_all("tr")
-                for row in rows:
-                    cells = row.find_all(["th", "td"])
-                    if not cells: continue
-                    
-                    txt = cells[0].get_text(strip=True).lower()
-                    
-                    month_num = 0
-                    for m_name, m_idx in MONTH_MAP.items():
-                        if m_name in txt: 
-                            month_num = m_idx
-                            break
-                    
-                    if month_num > 0:
-                        # Value usually in second cell (index 1) or look for digit
-                        # cells[0] is month name
-                        if len(cells) > 1:
-                            val_txt = cells[1].get_text(strip=True)
-                            val = parse_sii_value(val_txt)
-                            if val:
-                                date_str = f"{year}-{month_num:02d}-01T00:00:00.000Z"
-                                results.append({"fecha": date_str, "valor": val})
-                return results
-
-            # UF / USD Grid Format
-            # Locate table. Try multiple IDs.
-            table = soup.find("table", id="table_export")
-            if not table:
-                # Fallback: Look for table with header year
-                tables = soup.find_all("table")
-                for t in tables:
-                    if "enero" in t.get_text().lower() or "dia" in t.get_text().lower() or "día" in t.get_text().lower():
-                        table = t
-                        break
-            
-            if not table:
-                logger.warning("No table found in SII page")
-                return []
-                
-            # Parse Headers
-            headers = [th.get_text(strip=True).lower() for th in table.find_all("th")]
-            
-            # If headers are empty (sometimes they use TD for headers), try first TR
-            if not headers:
-                first_row = table.find("tr")
-                if first_row:
-                    headers = [td.get_text(strip=True).lower() for td in first_row.find_all(["td", "th"])]
-
-            col_map = {}
-            for i, h in enumerate(headers):
-                for m_name, m_idx in MONTH_MAP.items():
-                    if m_name in h:
-                        col_map[i] = m_idx
-                        break
-            
-            # Rows
-            rows = table.find_all("tr")
+            logger.error(f"SII Error {resp.status_code} for {url}")
+            return []
+        
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        
+        # UTM Format
+        if ind_lower == "utm":
+            rows = soup.find_all("tr")
             for row in rows:
-                cells = row.find_all(["td", "th"])
+                cells = row.find_all(["th", "td"])
                 if not cells: continue
                 
-                # Check for Day in first cell
-                day_txt = cells[0].get_text(strip=True)
-                if not day_txt.isdigit(): continue
-                day = int(day_txt)
+                txt = cells[0].get_text(strip=True).lower()
                 
-                # Iterate columns
-                for i, cell in enumerate(cells):
-                    if i == 0: continue # Skip day cell
-                    
-                    # Determine month for this column index
-                    month = col_map.get(i)
-                    if not month: continue
-                    
-                    val_txt = cell.get_text(strip=True)
-                    val = parse_sii_value(val_txt)
-                    if val is not None:
-                         try:
-                             # Check valid date
-                             # e.g. Feb 30 will fail
-                             datetime(year, month, day)
-                             date_str = f"{year}-{month:02d}-{day:02d}T00:00:00.000Z"
-                             results.append({"fecha": date_str, "valor": val})
-                         except ValueError:
-                             pass
+                month_num = 0
+                for m_name, m_idx in MONTH_MAP.items():
+                    if m_name in txt: 
+                        month_num = m_idx
+                        break
+                
+                if month_num > 0:
+                    # Value usually in second cell (index 1) or look for digit
+                    # cells[0] is month name
+                    if len(cells) > 1:
+                        val_txt = cells[1].get_text(strip=True)
+                        val = parse_sii_value(val_txt)
+                        if val:
+                            date_str = f"{year}-{month_num:02d}-01T00:00:00.000Z"
+                            results.append({"fecha": date_str, "valor": val})
             return results
+
+        # UF / USD Grid Format
+        # Locate table. Try multiple IDs.
+        table = soup.find("table", id="table_export")
+        if not table:
+            # Fallback: Look for table with header year
+            tables = soup.find_all("table")
+            for t in tables:
+                if "enero" in t.get_text().lower() or "dia" in t.get_text().lower() or "día" in t.get_text().lower():
+                    table = t
+                    break
+        
+        if not table:
+            logger.warning("No table found in SII page")
+            return []
+            
+        # Parse Headers
+        headers = [th.get_text(strip=True).lower() for th in table.find_all("th")]
+        
+        # If headers are empty (sometimes they use TD for headers), try first TR
+        if not headers:
+            first_row = table.find("tr")
+            if first_row:
+                headers = [td.get_text(strip=True).lower() for td in first_row.find_all(["td", "th"])]
+
+        col_map = {}
+        for i, h in enumerate(headers):
+            for m_name, m_idx in MONTH_MAP.items():
+                if m_name in h:
+                    col_map[i] = m_idx
+                    break
+        
+        # Rows
+        rows = table.find_all("tr")
+        for row in rows:
+            cells = row.find_all(["td", "th"])
+            if not cells: continue
+            
+            # Check for Day in first cell
+            day_txt = cells[0].get_text(strip=True)
+            if not day_txt.isdigit(): continue
+            day = int(day_txt)
+            
+            # Iterate columns
+            for i, cell in enumerate(cells):
+                if i == 0: continue # Skip day cell
+                
+                # Determine month for this column index
+                month = col_map.get(i)
+                if not month: continue
+                
+                val_txt = cell.get_text(strip=True)
+                val = parse_sii_value(val_txt)
+                if val is not None:
+                     try:
+                         # Check valid date
+                         # e.g. Feb 30 will fail
+                         datetime(year, month, day)
+                         date_str = f"{year}-{month:02d}-{day:02d}T00:00:00.000Z"
+                         results.append({"fecha": date_str, "valor": val})
+                     except ValueError:
+                         pass
+        return results
 
     except Exception as e:
         logger.error(f"Error scraping SII history: {e}")
