@@ -26,47 +26,47 @@ async def fetch_bc_euro() -> Optional[float]:
             return None
         
         soup = BeautifulSoup(resp.text, 'html.parser')
-            # Look for table with "Día" in header
-            target_table = None
-            tables = soup.find_all("table")
-            for t in tables:
-                if "Día" in t.get_text():
-                    target_table = t
-                    break
-            
-            if not target_table:
-                return None
-            
-            # Find latest value for this month
-            # Iterate backwards from today to 1
-            now = datetime.now()
-            current_day = now.day
-            month_idx = now.month
-            
-            # Map rows by day
-            day_values = {}
-            rows = target_table.find_all("tr")
-            for row in rows:
-                cells = row.find_all(["td", "th"])
-                if not cells: continue
-                cell0 = cells[0].get_text(strip=True)
-                if cell0.isdigit():
-                    d = int(cell0)
-                    if month_idx < len(cells):
-                        val_txt = cells[month_idx].get_text(strip=True)
-                        clean = val_txt.replace(".", "").replace(",", ".")
-                        if clean:
-                           try:
-                               day_values[d] = float(clean)
-                           except:
-                               pass
-
-            # Find latest
-            for d in range(current_day, 0, -1):
-                if d in day_values:
-                    return day_values[d]
-                    
+        # Look for table with "Día" in header
+        target_table = None
+        tables = soup.find_all("table")
+        for t in tables:
+            if "Día" in t.get_text():
+                target_table = t
+                break
+        
+        if not target_table:
             return None
+        
+        # Find latest value for this month
+        # Iterate backwards from today to 1
+        now = datetime.now()
+        current_day = now.day
+        month_idx = now.month
+        
+        # Map rows by day
+        day_values = {}
+        rows = target_table.find_all("tr")
+        for row in rows:
+            cells = row.find_all(["td", "th"])
+            if not cells: continue
+            cell0 = cells[0].get_text(strip=True)
+            if cell0.isdigit():
+                d = int(cell0)
+                if month_idx < len(cells):
+                    val_txt = cells[month_idx].get_text(strip=True)
+                    clean = val_txt.replace(".", "").replace(",", ".")
+                    if clean:
+                       try:
+                           day_values[d] = float(clean)
+                       except:
+                           pass
+
+        # Find latest
+        for d in range(current_day, 0, -1):
+            if d in day_values:
+                return day_values[d]
+                
+        return None
     except Exception as e:
         print(f"BC Scraper Error: {e}")
         return None
