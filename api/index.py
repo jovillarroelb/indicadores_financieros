@@ -51,6 +51,8 @@ async def get_history(indicator: str, start: str, end: str):
          raise HTTPException(status_code=400, detail="Invalid date range")
     return data
 
-if __name__ == "__main__":
-    import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+
+# Vercel Handler
+from mangum import Mangum
+handler = Mangum(app)
