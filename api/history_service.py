@@ -20,7 +20,7 @@ async def fetch_history_from_sii(indicator: str, year: int) -> List[Dict[str, An
              url = f"https://mindicador.cl/api/euro/{year}"
              def _req_euro():
                  headers = {"User-Agent": "Mozilla/5.0"}
-                 return requests.get(url, headers=headers, timeout=20.0, verify=False)
+                 return requests.get(url, headers=headers, timeout=3.0, verify=False)
              
              resp = await asyncio.to_thread(_req_euro)
              if resp.status_code == 200:
@@ -51,7 +51,7 @@ async def fetch_history_from_sii(indicator: str, year: int) -> List[Dict[str, An
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
         def _req_sii():
-            return requests.get(url, headers=headers, timeout=20.0, verify=False)
+            return requests.get(url, headers=headers, timeout=4.0, verify=False)
 
         resp = await asyncio.to_thread(_req_sii)
         if resp.status_code != 200:

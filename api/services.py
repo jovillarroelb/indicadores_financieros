@@ -19,7 +19,7 @@ async def fetch_bc_euro() -> Optional[float]:
     try:
         def _req():
             headers = {"User-Agent": "Mozilla/5.0"}
-            return requests.get(BC_EURO_URL, headers=headers, timeout=20.0, verify=False)
+            return requests.get(BC_EURO_URL, headers=headers, timeout=3.0, verify=False)
         
         resp = await asyncio.to_thread(_req)
         if resp.status_code != 200:
